@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wizard's Chess — Sculpted Reference Preview</title>
+    <title>Wizard's Chess</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts: Inter & Cinzel for subtle gothic accents -->
@@ -4656,12 +4656,12 @@ function updateChamberAtmosphere(t){
                 const archHalf1 = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 20, 8), matCathedralStone);
                 archHalf1.position.set(-8.2, 29.5, zPos);
                 archHalf1.rotation.z = -0.98;
-                cathedral.add(archHalf1);
+                archHalf1.name='overhead-vault';cathedral.add(archHalf1);
 
                 const archHalf2 = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 20, 8), matCathedralStone);
                 archHalf2.position.set(8.2, 29.5, zPos);
                 archHalf2.rotation.z = 0.98;
-                cathedral.add(archHalf2);
+                archHalf2.name='overhead-vault';cathedral.add(archHalf2);
             });
 
             scene.add(cathedral);
@@ -5587,6 +5587,9 @@ function ensurePhysicalRig(mesh){
  const movingMaterial=sculpturePalette(mesh.userData.color).stone.clone();
  movingMaterial.skinning=false;movingMaterial.transparent=false;movingMaterial.opacity=1;movingMaterial.depthWrite=true;
  combat.rig.traverse(o=>{if(o.isMesh)o.material=movingMaterial;});
+ // Render original sculpture geometry without the defective skin deformation.
+ original.material.skinning=false;
+ original.material.transparent=false;original.material.opacity=1;original.material.depthWrite=true;
  original.parent.add(combat.rig);state.combat=combat;original.visible=true;combat.rig.visible=false;return combat;
 }
 function restorePhysicalRig(mesh){
@@ -6346,6 +6349,7 @@ function updateActiveAnimations(dt){
             camera.position.y = camState.lookAt.y + camState.radius * Math.cos(camState.phi) + shakeY;
             camera.position.z = camState.lookAt.z + camState.radius * Math.sin(camState.phi) * Math.cos(camState.theta) + shakeZ;
             camera.lookAt(camState.lookAt);
+            scene.traverse(o=>{if(o.name==='overhead-vault')o.visible=camera.position.y<18;});
 
             // 2. Update Piece Glide & Combat Animations
             updateActiveAnimations(dt);
@@ -6431,7 +6435,7 @@ function updateActiveAnimations(dt){
             catch(error) {console.error(error);loading.textContent='Unable to load detailed pieces. Reload this file to try again.';return;}
 
             rebuildBoardPiecesFromFEN();
-            loading.textContent='Preparing smooth combatâ€¦';
+            loading.textContent='Preparing the board...';
             await warmPhysicalCombat();
             // Compile both sculpture and articulated materials before the first capture.
             Object.values(pieceMeshes).forEach(m=>{const c=ensurePhysicalRig(m);c.rig.visible=false;});
@@ -6444,6 +6448,6 @@ function updateActiveAnimations(dt){
             animateLoop();
         };
     </script>
-<aside style="position:fixed;bottom:8px;left:12px;z-index:30;font:11px sans-serif;color:#cbd5e1;background:#111827dd;padding:6px 9px;border-radius:6px">Sculpted reference preview · <a style="color:#e9c879" href="CREDITS.md" target="_blank" rel="noopener">Scott Davis / Meyerhouse · CC BY-NC-SA 4.0</a></aside>
+<aside style="position:fixed;bottom:8px;left:12px;z-index:30;font:11px sans-serif;color:#cbd5e1;background:#111827dd;padding:6px 9px;border-radius:6px">Wizard chess · <a style="color:#e9c879" href="CREDITS.md" target="_blank" rel="noopener">Scott Davis / Meyerhouse · CC BY-NC-SA 4.0</a></aside>
 </body>
 </html>
