@@ -4891,7 +4891,34 @@ function retainedSoldierSculpture(original){
    }
   }
  }
- const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(out,3));g.setAttribute('normal',new THREE.Float32BufferAttribute(normals,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));return g;
+
+ // Give the retained static STL a thin inward shell and join its open seams.
+ // Exterior coordinates are unchanged; moving armor is independently closed.
+ const vertices=new Map(),edges=new Map(),tris=[];
+ const key=p=>p.map(v=>Math.round(v*1e5)).join(',');
+ for(let i=0;i<out.length;i+=9){
+  const ids=[];
+  for(let j=0;j<9;j+=3){const p=out.slice(i+j,i+j+3),k=key(p);ids.push(k);
+   if(!vertices.has(k))vertices.set(k,{p:new THREE.Vector3(...p),n:new THREE.Vector3()});
+   vertices.get(k).n.add(new THREE.Vector3(...normals.slice(i+j,i+j+3)));
+  }
+  if(new Set(ids).size<3)continue;tris.push(ids);
+  for(let j=0;j<3;j++){const a=ids[j],b=ids[(j+1)%3],k=[a,b].sort().join('|');if(edges.has(k))edges.get(k).count++;else edges.set(k,{a,b,count:1});}
+ }
+ for(const v of vertices.values()){
+  v.n.normalize();v.inner=v.p.clone().addScaledVector(v.n,-.0006);
+  if(key(v.inner.toArray())===key(v.p.toArray()))v.inner.add(new THREE.Vector3(.00002,-.00003,.00002));
+ }
+ const positions=[],ns=[],tex=[];
+ function emit(points,normal){for(const p of points){positions.push(...p.toArray());ns.push(...normal.toArray());tex.push(p.x+.5,p.y);}}
+ // Preserve authored exterior normals.
+ for(let i=0;i<out.length;i++)positions.push(out[i]);for(let i=0;i<normals.length;i++)ns.push(normals[i]);for(let i=0;i<uv.length;i++)tex.push(uv[i]);
+ for(const tri of tris){const t=[tri[2],tri[1],tri[0]].map(k=>vertices.get(k).inner);const n=t[1].clone().sub(t[0]).cross(t[2].clone().sub(t[0])).normalize();emit(t,n);}
+ for(const e of edges.values())if(e.count%2===1){
+  const a=vertices.get(e.a),b=vertices.get(e.b),n=b.p.clone().sub(a.p).cross(a.inner.clone().sub(a.p)).normalize();
+  emit([b.p,a.p,a.inner],n);emit([b.p,a.inner,b.inner],n);
+ }
+ const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(positions.map(v=>Math.round(v*1e5)/1e5),3));g.setAttribute('normal',new THREE.Float32BufferAttribute(ns,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(tex,2));return g;
 }
 
 // Purpose-built rigid armor: no triangle deletion and no fused printing mesh.
