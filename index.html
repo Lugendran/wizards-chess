@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wizard's Chess — Physical Combat</title>
+    <title>Wizard's Chess — Sculpted Reference Preview</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts: Inter & Cinzel for subtle gothic accents -->
@@ -3749,7 +3749,25 @@
         .title-gothic { color:#d4c5a5; }
         canvas { touch-action:none; }
         @media(max-width:640px) { footer {max-height:145px;overflow:auto;} header nav {border-radius:16px!important;} }
-    </style>
+    
+        #phone-actions { display:none; }
+        @media (max-width:900px), (max-height:500px) and (pointer:coarse) {
+          html,body { height:100%; height:100dvh; overflow:hidden; }
+          #game-header {gap:6px;justify-content:center;}
+          #game-header>div:first-child {padding:6px 10px;gap:8px;}
+          #game-header .title-gothic {font-size:11px;letter-spacing:0;}
+          #turn-badge {padding:4px 8px;}
+          #turn-text {font-size:11px;}
+          #phone-actions {display:flex;gap:8px;justify-content:center;}
+          #phone-actions button {background:#17232d;color:#e1e9f1;border:1px solid #63717d;border-radius:20px;padding:9px 16px;font:600 12px Inter,sans-serif;min-height:36px;}
+          #phone-controls {display:none!important;position:absolute;top:92px;left:8px;right:8px;padding:12px;max-height:50dvh;overflow:auto;border-radius:18px!important;background:#111b25;}
+          body.phone-menu-open #phone-controls {display:flex!important;}
+          #game-history {display:none!important;position:absolute;bottom:28px;left:8px;right:8px;width:auto;max-height:40dvh;overflow:auto;background:#111b25;border-radius:16px;}
+          body.phone-history-open #game-history {display:flex!important;}
+          body>aside[style*="position:fixed"][style*="bottom"] {font-size:9px!important;max-width:95%;}
+        }
+
+</style>
 </head>
 <body>
 
@@ -3760,7 +3778,7 @@
     <div class="relative z-10 pointer-events-none w-full h-full flex flex-col justify-between p-3 sm:p-5">
 
         <!-- TOP NAVIGATION BAR (Single-Level Navigation) -->
-        <header class="w-full max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-3 pointer-events-auto">
+        <header id="game-header" class="w-full max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-3 pointer-events-auto">
             
             <!-- Brand & Turn Status Pill -->
             <div class="md-surface rounded-full px-4 py-2 flex items-center gap-4">
@@ -3785,7 +3803,7 @@
             </div>
 
             <!-- Single-Level Action Bar: Mode, Camera Presets, Audio, Undo, Reset -->
-            <nav class="md-surface rounded-full p-1.5 flex items-center flex-wrap gap-1">
+            <nav id="phone-controls" class="md-surface rounded-full p-1.5 flex items-center flex-wrap gap-1">
                 
                 <!-- Mode Toggle: Player vs AI / 2P Pass & Play -->
                 <button id="btn-mode" class="md-btn px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-medium flex items-center gap-1.5 border border-transparent md-chip-active" title="Switch Game Mode">
@@ -3852,10 +3870,15 @@
                     <span class="hidden sm:inline">Reset</span>
                 </button>
             </nav>
+            <div id="phone-actions">
+              <button id="phone-fit" type="button">Full board</button>
+              <button id="phone-menu" type="button" aria-expanded="false" aria-controls="phone-controls">Menu</button>
+              <button id="phone-history" type="button" aria-expanded="false" aria-controls="game-history">Moves</button>
+            </div>
         </header>
 
         <!-- BOTTOM COMPACT HUD: Captured Relics & Move Log -->
-        <footer class="w-full max-w-6xl mx-auto flex flex-col sm:flex-row items-stretch sm:items-end justify-between gap-3 pointer-events-auto">
+        <footer id="game-history" class="w-full max-w-6xl mx-auto flex flex-col sm:flex-row items-stretch sm:items-end justify-between gap-3 pointer-events-auto">
             
             <!-- Captured Pieces & Material Advantage Card -->
             <div class="md-surface rounded-2xl px-4 py-3 flex flex-col gap-2 min-w-[260px] sm:max-w-xs">
@@ -5564,11 +5587,11 @@ function ensurePhysicalRig(mesh){
  const movingMaterial=sculpturePalette(mesh.userData.color).stone.clone();
  movingMaterial.skinning=false;movingMaterial.transparent=false;movingMaterial.opacity=1;movingMaterial.depthWrite=true;
  combat.rig.traverse(o=>{if(o.isMesh)o.material=movingMaterial;});
- original.parent.add(combat.rig);state.combat=combat;original.visible=false;combat.rig.visible=true;return combat;
+ original.parent.add(combat.rig);state.combat=combat;original.visible=true;combat.rig.visible=false;return combat;
 }
 function restorePhysicalRig(mesh){
  const c=mesh.userData.reference&&mesh.userData.reference.combat;
- if(c){c.rig.visible=true;c.original.visible=false;c.pose(0);}
+ if(c){c.rig.visible=false;c.original.visible=true;c.pose(0);}
 }
 function findImpactSurface(victim,desired){
  let source;victim.traverse(o=>{if(o.isSkinnedMesh)source=o;});
@@ -5675,7 +5698,7 @@ function updateActiveAnimations(dt){
   if(a.type==='combat'&&!a.physical)beginPhysicalCapture(a);
   a.elapsed+=step;const t=Math.min(a.elapsed/a.duration,1),facing=m.userData.facingYaw;
   if(a.type==='glide'){
-   m.position.lerpVectors(a.startPos,a.endPos,guardianSmooth(t));sampleReferencePose(m,'Advance',t);
+   m.position.lerpVectors(a.startPos,a.endPos,guardianSmooth(t));sampleReferencePose(m,'Idle',0);
    const turn=Math.atan2(Math.sin(a.attackYaw-facing),Math.cos(a.attackYaw-facing));j.bodyRoot.rotation.y=facing+turn*Math.sin(Math.PI*t);
    if(a.pieceType==='n')m.position.y=Math.sin(t*Math.PI)*.22;
   }else{
@@ -5686,8 +5709,12 @@ function updateActiveAnimations(dt){
    const turn=(from,to,u)=>from+Math.atan2(Math.sin(to-from),Math.cos(to-from))*u;
    j.bodyRoot.rotation.set(0,t<.22?turn(a.startYaw,a.attackYaw,guardianSmooth(t/.22)):t<.83?a.attackYaw:turn(a.attackYaw,facing,guardianSmooth((t-.83)/.17)),0);
    const phase=THREE.MathUtils.clamp((t-.18)/.65,0,1);
-   // One persistent opaque model; no silhouette swap at recovery.
-   c.rig.visible=true;c.original.visible=false;
+   // Rigid anticipation and recoil preserve the sculpted arms and original weapon.
+   const accent=Math.sin(Math.PI*phase);
+   j.bodyRoot.rotation.x=-.10*accent;
+   if(a.pieceType==='n')m.position.y=.16*accent;
+   // Keep the intact sculpture visible. The hidden rig only calculates contact timing.
+   c.rig.visible=false;c.original.visible=true;
    m.updateMatrixWorld(true);
    const local=c.rig.worldToLocal(a.contactTarget.clone());c.pose(phase,local);m.updateMatrixWorld(true);
    if(phase>=.45&&!a.swungAudio){soundFX.playWeaponSwing(a.pieceType);a.swungAudio=true;}
@@ -6164,13 +6191,44 @@ function updateActiveAnimations(dt){
             }
         }
 
+        function compactBoard(){ return window.innerWidth<=900 || (window.innerHeight<=500 && window.matchMedia('(pointer:coarse)').matches); }
+        function fitWholeBoard(immediate=false){
+            const theta=0,phi=.52,target=new THREE.Vector3(0,1,0);
+            const direction=new THREE.Vector3(0,Math.cos(phi),Math.sin(phi));
+            const right=new THREE.Vector3(1,0,0),up=new THREE.Vector3(0,Math.sin(phi),-Math.cos(phi));
+            const tan=Math.tan(THREE.MathUtils.degToRad(camera.fov/2));
+            const aspect=window.innerWidth/window.innerHeight;
+            // Reserve symmetric space for the compact header and browser safe areas.
+            const usableY=Math.max(.30,1-210/window.innerHeight),usableX=.92;
+            let distance=0;
+            for(const x of [-8.8,8.8])for(const y of [0,3.3])for(const z of [-8.8,8.8]){
+                const point=new THREE.Vector3(x,y,z).sub(target),depth=point.dot(direction);
+                distance=Math.max(distance,depth+Math.abs(point.dot(right))/(tan*aspect*usableX),depth+Math.abs(point.dot(up))/(tan*usableY));
+            }
+            camState.targetTheta=theta;camState.targetPhi=phi;camState.targetRadius=distance;
+            camState.targetLookAt.copy(target);
+            if(immediate){camState.theta=theta;camState.phi=phi;camState.radius=distance;camState.lookAt.copy(target);}
+            document.querySelectorAll('.cam-btn').forEach(b=>b.classList.remove('md-chip-active'));
+        }
+        function bindPhoneControls(){
+            const menu=document.getElementById('phone-menu'),history=document.getElementById('phone-history');
+            function close(){document.body.classList.remove('phone-menu-open','phone-history-open');menu.setAttribute('aria-expanded','false');history.setAttribute('aria-expanded','false');}
+            menu.addEventListener('click',()=>{const open=!document.body.classList.contains('phone-menu-open');close();document.body.classList.toggle('phone-menu-open',open);menu.setAttribute('aria-expanded',String(open));});
+            history.addEventListener('click',()=>{const open=!document.body.classList.contains('phone-history-open');close();document.body.classList.toggle('phone-history-open',open);history.setAttribute('aria-expanded',String(open));});
+            document.getElementById('phone-fit').addEventListener('click',()=>{close();fitWholeBoard();});
+            document.getElementById('phone-controls').addEventListener('click',e=>{if(e.target.closest('button'))close();});
+            document.addEventListener('keydown',e=>{if(e.key==='Escape')close();});
+        }
+
         function onWindowResize() {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
+            if(compactBoard())fitWholeBoard(true);
         }
 
         function bindUIEvents() {
+            bindPhoneControls();
             document.getElementById('btn-finish').addEventListener('click',()=>{
                 if(isBusyAnimating)return;
                 pieceFinish=pieceFinish==='metal'?'wood':'metal';
@@ -6373,18 +6431,19 @@ function updateActiveAnimations(dt){
             catch(error) {console.error(error);loading.textContent='Unable to load detailed pieces. Reload this file to try again.';return;}
 
             rebuildBoardPiecesFromFEN();
-            loading.textContent='Preparing smooth combat…';
+            loading.textContent='Preparing smooth combatâ€¦';
             await warmPhysicalCombat();
             // Compile both sculpture and articulated materials before the first capture.
-            Object.values(pieceMeshes).forEach(m=>{const c=ensurePhysicalRig(m);c.rig.visible=true;});
+            Object.values(pieceMeshes).forEach(m=>{const c=ensurePhysicalRig(m);c.rig.visible=false;});
             renderer.compile(scene,camera);
             Object.values(pieceMeshes).forEach(restorePhysicalRig);
             loading.remove();
             bindUIEvents();
             updateHUD();
+            if(compactBoard()) { cinematicCamEnabled=false; fitWholeBoard(true); }
             animateLoop();
         };
     </script>
-<aside style="position:fixed;bottom:8px;left:12px;z-index:30;font:11px sans-serif;color:#cbd5e1;background:#111827dd;padding:6px 9px;border-radius:6px">Physical combat · <a style="color:#e9c879" href="CREDITS.md" target="_blank" rel="noopener">Scott Davis / Meyerhouse · CC BY-NC-SA 4.0</a></aside>
+<aside style="position:fixed;bottom:8px;left:12px;z-index:30;font:11px sans-serif;color:#cbd5e1;background:#111827dd;padding:6px 9px;border-radius:6px">Sculpted reference preview · <a style="color:#e9c879" href="CREDITS.md" target="_blank" rel="noopener">Scott Davis / Meyerhouse · CC BY-NC-SA 4.0</a></aside>
 </body>
 </html>
