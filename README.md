@@ -1,13 +1,7 @@
-# Wizard's Chess
+# Wizard’s Chess
 
-A browser chess game with detailed fantasy sculptures, animated combat and a torch-lit stone chamber.
+Play: https://lugendran.github.io/wizards-chess/
 
-Open index.html in a WebGL-capable browser. Internet access loads runtime libraries and fonts. Blender is not required to play. Tap a piece and then a highlighted square; drag the board to orbit the camera. Landscape orientation gives phones more room. Mobile performance has not been verified on a physical phone.
+Start screen with Play and Learn, Easy/Medium/Hard AI, detailed models shared by mobile and desktop, rigid attacks, dust-only shattering, synchronized sound and optional original background music.
 
-## Hosting
-
-GitHub Pages: deploy from branch main, folder / (root). No build step is needed.
-
-## Attribution
-
-See [CREDITS.md](CREDITS.md). Adapted sculptures are CC BY-NC-SA 4.0.
+GitHub Pages serves main, root folder. Keep index.html and all model chunk .js files and impact.js together. Internet loads runtime libraries and fonts. Physical-phone performance has not been verified. See CREDITS.md for model and sound attribution.
